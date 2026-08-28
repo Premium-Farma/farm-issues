@@ -15,7 +15,7 @@ import io
 import bcrypt
 import jwt
 from datetime import datetime, timezone, timedelta
-from pydantic import BaseModel, Field, EmailStr
+from pydantic import BaseModel, Field, EmailStr, model_validator
 from typing import List, Optional, Literal
 
 from email_service import notify_assigned, notify_followup, notify_resolved, notify_status_change
@@ -109,6 +109,7 @@ async def require_admin(user: dict = Depends(get_current_user)) -> dict:
 TIPOLOGIA = Literal["TFO", "Simplex", "Encomendas", "Preço Plataforma", "Parametrizações", "Outros"]
 PRIORIDADE = Literal["Baixa", "Media", "Alta", "Critica"]
 ESTADO = Literal["Aberto", "Em Curso", "Resolvido"]
+TIPO_PEDIDO = Literal["Farmácia", "Interno"]
 ROLE = Literal["admin", "consultor", "marketing"]
 
 
@@ -131,8 +132,9 @@ class UserUpdate(BaseModel):
 
 
 class ProblemaCreate(BaseModel):
-    farmacia: str
-    laboratorio: str
+    tipo: TIPO_PEDIDO = "Farmácia"
+    farmacia: str = ""
+    laboratorio: str = ""
     consultor: str
     descricao: str
     tipologia: TIPOLOGIA
@@ -141,8 +143,15 @@ class ProblemaCreate(BaseModel):
     data_prevista: Optional[str] = None
     atribuido_a_id: Optional[str] = None
 
+    @model_validator(mode="after")
+    def _check_farmacia(self):
+        if self.tipo == "Farmácia" and not self.farmacia.strip():
+            raise ValueError("Farmácia é obrigatória para pedidos do tipo Farmácia")
+        return self
+
 
 class ProblemaUpdate(BaseModel):
+    tipo: Optional[TIPO_PEDIDO] = None
     farmacia: Optional[str] = None
     laboratorio: Optional[str] = None
     consultor: Optional[str] = None

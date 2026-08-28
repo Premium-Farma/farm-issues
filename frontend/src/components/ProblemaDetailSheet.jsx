@@ -230,12 +230,12 @@ export default function ProblemaDetailSheet({ problema, open, onOpenChange, onUp
         <SheetHeader className="px-6 py-5 border-b border-[#E5E3DB] bg-white">
           <div className="flex items-start justify-between gap-4">
             <div className="min-w-0">
-              <p className="label-mini">Problema · {data?.id?.slice(0, 8)}</p>
+              <p className="label-mini">{data?.tipo || "Pedido"} · {data?.id?.slice(0, 8)}</p>
               <SheetTitle className="text-2xl font-medium tracking-tight mt-1 truncate" style={{ fontFamily: "Chivo" }}>
-                {data?.farmacia || problema?.farmacia}
+                {data?.farmacia || data?.tipologia || problema?.farmacia}
               </SheetTitle>
               <SheetDescription className="text-sm text-[#5C665D] mt-1">
-                {data?.laboratorio} · {data?.tipologia}
+                {data?.laboratorio ? `${data.laboratorio} · ${data?.tipologia}` : data?.tipologia}
               </SheetDescription>
             </div>
             {data && <StatusPill estado={data.estado} testid="detail-estado" />}
@@ -341,8 +341,8 @@ export default function ProblemaDetailSheet({ problema, open, onOpenChange, onUp
                 </div>
               ) : (
                 <div className="grid grid-cols-2 gap-x-6 gap-y-1 mb-4">
-                  <Info icon={Buildings} label="Farmácia" value={data.farmacia} />
-                  <Info icon={Flask} label="Laboratório" value={data.laboratorio} />
+                  <Info icon={Buildings} label="Farmácia" value={data.farmacia || "—"} />
+                  <Info icon={Flask} label="Laboratório" value={data.laboratorio || "—"} />
                   <Info icon={User} label="Consultor" value={data.consultor} />
                   <Info icon={Tag} label="Tipologia" value={data.tipologia} />
                   <div className="flex items-start gap-2.5 py-2">

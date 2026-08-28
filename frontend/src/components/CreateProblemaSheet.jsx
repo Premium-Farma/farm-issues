@@ -20,6 +20,7 @@ const inputCls = "w-full px-3 py-2 bg-white border border-[#E5E3DB] rounded-sm t
 const selectTriggerCls = "w-full h-9 bg-white border-[#E5E3DB] rounded-sm text-sm focus:ring-1 focus:ring-[#384C37]";
 
 const empty = {
+  tipo: "Farmácia",
   farmacia: "", laboratorio: "", consultor: "",
   descricao: "", tipologia: "TFO", prioridade: "Media",
   estado: "Aberto", data_prevista: "", atribuido_a_id: UNASSIGNED,
@@ -48,6 +49,10 @@ export default function CreateProblemaSheet({ open, onOpenChange, onCreated }) {
     setLoading(true);
     try {
       const payload = { ...form };
+      if (payload.tipo === "Interno") {
+        payload.farmacia = "";
+        payload.laboratorio = "";
+      }
       if (!payload.data_prevista) delete payload.data_prevista;
       if (!payload.atribuido_a_id || payload.atribuido_a_id === UNASSIGNED) delete payload.atribuido_a_id;
       const { data } = await api.post("/problemas", payload);
@@ -97,18 +102,45 @@ export default function CreateProblemaSheet({ open, onOpenChange, onCreated }) {
         </SheetHeader>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-4" data-testid="create-problema-form">
-          <div className="grid grid-cols-2 gap-4">
-            <Field label="Farmácia" required>
-              <input data-testid="form-farmacia" required className={inputCls}
-                value={form.farmacia} onChange={(e) => update("farmacia", e.target.value)}
-                placeholder="Ex: Farmácia Central" />
-            </Field>
-            <Field label="Laboratório" required>
-              <input data-testid="form-laboratorio" required className={inputCls}
-                value={form.laboratorio} onChange={(e) => update("laboratorio", e.target.value)}
-                placeholder="Ex: Bayer" />
-            </Field>
-          </div>
+          <Field label="Tipo de pedido">
+            <div className="inline-flex rounded-sm border border-[#E5E3DB] overflow-hidden">
+              {["Farmácia", "Interno"].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  data-testid={`form-tipo-${t}`}
+                  onClick={() => update("tipo", t)}
+                  className={`px-5 py-2 text-sm transition-colors ${
+                    form.tipo === t
+                      ? "bg-[#384C37] text-white"
+                      : "bg-white text-[#384C37] hover:bg-[#F0EFEB]"
+                  }`}
+                >
+                  {t}
+                </button>
+              ))}
+            </div>
+            <p className="text-xs text-[#8A938B] mt-1.5">
+              {form.tipo === "Interno"
+                ? "Pedido interno (ex.: tarefa para marketing) — sem farmácia/laboratório."
+                : "Pedido reportado por uma farmácia."}
+            </p>
+          </Field>
+
+          {form.tipo === "Farmácia" && (
+            <div className="grid grid-cols-2 gap-4">
+              <Field label="Farmácia" required>
+                <input data-testid="form-farmacia" required className={inputCls}
+                  value={form.farmacia} onChange={(e) => update("farmacia", e.target.value)}
+                  placeholder="Ex: Farmácia Central" />
+              </Field>
+              <Field label="Laboratório" required>
+                <input data-testid="form-laboratorio" required className={inputCls}
+                  value={form.laboratorio} onChange={(e) => update("laboratorio", e.target.value)}
+                  placeholder="Ex: Bayer" />
+              </Field>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <Field label="Consultor" required>

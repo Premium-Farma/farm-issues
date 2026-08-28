@@ -242,8 +242,12 @@ export default function ProblemasPage() {
                   onClick={() => { setSelected(p); setDetailOpen(true); }}
                   className="data-row border-b border-[#E5E3DB] last:border-0 cursor-pointer"
                 >
-                  <td className="px-5 py-3 text-[#1E231F] font-medium">{p.farmacia}</td>
-                  <td className="px-5 py-3 text-[#343A35]">{p.laboratorio}</td>
+                  <td className="px-5 py-3 text-[#1E231F] font-medium">
+                    {p.tipo === "Interno"
+                      ? <span className="inline-flex items-center px-2 py-0.5 text-[11px] rounded-sm bg-[#EAEFE9] text-[#384C37]">Interno</span>
+                      : p.farmacia}
+                  </td>
+                  <td className="px-5 py-3 text-[#343A35]">{p.laboratorio || <span className="text-[#8A938B]">—</span>}</td>
                   <td className="px-5 py-3 text-[#343A35]">{p.consultor}</td>
                   <td className="px-5 py-3 text-[#343A35]">{p.atribuido_a_name || <span className="text-[#8A938B]">—</span>}</td>
                   <td className="px-5 py-3 text-[#343A35]">{p.tipologia}</td>
