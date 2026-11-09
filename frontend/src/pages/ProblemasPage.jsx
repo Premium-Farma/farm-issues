@@ -9,6 +9,7 @@ import ProblemaDetailSheet from "@/components/ProblemaDetailSheet";
 import { Plus, MagnifyingGlass, FunnelSimple, FileArrowDown, X } from "@phosphor-icons/react";
 
 const ALL = "__all__";
+const NONE = "__none__";
 
 const PRIORITY_RANK = { Baixa: 0, Media: 1, Alta: 2, Critica: 3 };
 const ESTADO_RANK = { Aberto: 0, "Em Curso": 1, Resolvido: 2 };
@@ -53,6 +54,7 @@ export default function ProblemasPage() {
 
   const [sortKey, setSortKey] = useState(null);
   const [sortDir, setSortDir] = useState("asc");
+  const [atribuido, setAtribuido] = useState(ALL);
 
   const handleSort = (key) => {
     if (sortKey === key) {
@@ -63,9 +65,24 @@ export default function ProblemasPage() {
     }
   };
 
+  const assigneeOptions = useMemo(() => {
+    const map = new Map();
+    items.forEach((i) => {
+      if (i.atribuido_a_id && i.atribuido_a_name) map.set(i.atribuido_a_id, i.atribuido_a_name);
+    });
+    return Array.from(map, ([id, name]) => ({ id, name }))
+      .sort((a, b) => a.name.localeCompare(b.name, "pt"));
+  }, [items]);
+
+  const filteredItems = useMemo(() => {
+    if (atribuido === ALL) return items;
+    if (atribuido === NONE) return items.filter((i) => !i.atribuido_a_id);
+    return items.filter((i) => i.atribuido_a_id === atribuido);
+  }, [items, atribuido]);
+
   const sortedItems = useMemo(() => {
-    if (!sortKey) return items;
-    const arr = [...items];
+    if (!sortKey) return filteredItems;
+    const arr = [...filteredItems];
     arr.sort((a, b) => {
       const va = getSortValue(a, sortKey);
       const vb = getSortValue(b, sortKey);
@@ -75,9 +92,9 @@ export default function ProblemasPage() {
       return sortDir === "asc" ? cmp : -cmp;
     });
     return arr;
-  }, [items, sortKey, sortDir]);
+  }, [filteredItems, sortKey, sortDir]);
 
-  const filtersActive = [estado !== ALL, tipologia !== ALL, !!farmacia, !!laboratorio, !!q].filter(Boolean).length;
+  const filtersActive = [estado !== ALL, tipologia !== ALL, !!farmacia, !!laboratorio, !!q, atribuido !== ALL].filter(Boolean).length;
 
   const fetchData = async () => {
     setLoading(true);
@@ -114,7 +131,7 @@ export default function ProblemasPage() {
   };
 
   const clearFilters = () => {
-    setQ(""); setEstado(ALL); setTipologia(ALL); setFarmacia(""); setLaboratorio("");
+    setQ(""); setEstado(ALL); setTipologia(ALL); setFarmacia(""); setLaboratorio(""); setAtribuido(ALL);
   };
 
   const stats = useMemo(() => ({
@@ -168,7 +185,7 @@ export default function ProblemasPage() {
             </button>
           )}
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-3">
           <div className="lg:col-span-2 relative">
             <MagnifyingGlass size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#8A938B]" />
             <input
@@ -204,6 +221,16 @@ export default function ProblemasPage() {
             placeholder="Farmácia"
             className="px-3 py-2 bg-white border border-[#E5E3DB] rounded-sm text-sm focus:outline-none focus:border-[#384C37] focus:ring-1 focus:ring-[#384C37]"
           />
+          <Select value={atribuido} onValueChange={setAtribuido}>
+            <SelectTrigger data-testid="filter-atribuido" className="h-9 bg-white border-[#E5E3DB] rounded-sm text-sm">
+              <SelectValue placeholder="Atribuído a" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL}>Todos (atribuição)</SelectItem>
+              <SelectItem value={NONE}>Sem atribuição</SelectItem>
+              {assigneeOptions.map((u) => <SelectItem key={u.id} value={u.id}>{u.name}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 
